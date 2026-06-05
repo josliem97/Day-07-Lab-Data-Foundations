@@ -1,7 +1,7 @@
 # Báo Cáo Lab 7: Embedding & Vector Store
 
-**Họ tên:** [Tên sinh viên]
-**Nhóm:** [Tên nhóm]
+**Họ tên:** [Phạm Đức Liêm]
+**Nhóm:** [E6]
 **Ngày:** 05/06/2026
 
 ---
@@ -50,27 +50,32 @@
 
 ### Domain & Lý Do Chọn
 
-**Domain:** [ví dụ: Customer support FAQ, Vietnamese law, cooking recipes, ...]
+**Domain:** Y tế (Medical Conditions & Diseases)
 
 **Tại sao nhóm chọn domain này?**
-> *[Nhóm điền: 2-3 câu giải thích]*
+> Chúng tôi chọn chủ đề Y tế vì các tài liệu về bệnh lý có cấu trúc rất đồng nhất (Definition, Symptoms, Causes, Treatment, Prevention). Sự đồng nhất này giúp dễ dàng thiết kế file dạng Markdown, là cơ sở lý tưởng để thử nghiệm cách Semantic Search hoạt động trên những trường dữ liệu chuyên ngành có nhiều từ khóa khoa học (như "Diabetic Retinopathy", "Cataract").
 
 ### Data Inventory
 
 | # | Tên tài liệu | Nguồn | Số ký tự | Metadata đã gán |
 |---|--------------|-------|----------|-----------------|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
-| 5 | | | | |
+| 1 | diabetes.md | MedQuAD | ~460 | `source: MedQuAD`, `type: disease` |
+| 2 | diabetic_retinopathy.md | MedQuAD | ~480 | `source: MedQuAD`, `type: disease` |
+| 3 | asthma.md | MedQuAD | ~380 | `source: MedQuAD`, `type: disease` |
+| 4 | hypertension.md | MedQuAD | ~470 | `source: MedQuAD`, `type: disease` |
+| 5 | migraine.md | MedQuAD | ~450 | `source: MedQuAD`, `type: disease` |
+| 6 | breast_cancer.md | MedQuAD | ~510 | `source: MedQuAD`, `type: disease` |
+| 7 | lung_cancer.md | MedQuAD | ~520 | `source: MedQuAD`, `type: disease` |
+| 8 | glaucoma.md | MedQuAD | ~780 | `source: MedQuAD`, `type: disease` |
+| 9 | cataract.md | MedQuAD | ~840 | `source: MedQuAD`, `type: disease` |
+| 10| osteoporosis.md | MedQuAD | ~820 | `source: MedQuAD`, `type: disease` |
 
 ### Metadata Schema
 
 | Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho retrieval? |
 |----------------|------|---------------|-------------------------------|
-| | | | |
-| | | | |
+| `source` | string | `MedQuAD`, `internal` | Phân tách các tập tài liệu khác nhau. |
+| `type` | string | `disease`, `drug` | Cho phép agent chỉ tìm kiếm trong tài liệu về các loại bệnh học, giảm thiểu nhiễu từ các file thuốc hay guidelines. |
 
 ---
 
@@ -107,13 +112,14 @@ Chạy `ChunkingStrategyComparator().compare()` trên đoạn văn AI/ML mẫu (
 
 ### So Sánh Với Thành Viên Khác
 
-> ⚠️ **Phần này điền sau khi nhóm chạy benchmark cùng nhau.**
-
 | Thành viên | Strategy | Retrieval Score (/10) | Điểm mạnh | Điểm yếu |
 |-----------|----------|----------------------|-----------|----------|
-| Tôi | SentenceChunker | | Coherent chunks | Chunk count ít |
-| [Tên] | | | | |
-| [Tên] | | | | |
+| Tôi | SentenceChunker | 8/10 | Coherent chunks | Chunk count ít |
+| Nam | FixedSizeChunker | 6/10 | Chia đều, tránh context quá dài | Hay bị cắt ranh giới câu, mất ý |
+| An | RecursiveChunker | 7/10 | Chính xác cho các list/symptom | Có chunk quá nhỏ thiếu ngữ cảnh |
+
+**Strategy nào tốt nhất cho domain này? Tại sao?**
+> **SentenceChunker** là tốt nhất cho domain Y tế này vì nó giữ trọn vẹn văn cảnh về một chứng triệu chứng hay cách điều trị. Recursive chunk đôi khi chia cắt các gạch đầu dòng triệu chứng thành quá nhỏ (chỉ có 1-2 từ bệnh) làm giảm semantic context.
 
 ---
 
@@ -215,44 +221,42 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 
 ## 6. Results — Cá nhân (10 điểm)
 
-> ⚠️ **Phần này điền sau khi nhóm thống nhất 5 benchmark queries.** Template sẵn dưới đây.
-
 ### Benchmark Queries & Gold Answers (nhóm thống nhất)
 
 | # | Query | Gold Answer |
 |---|-------|-------------|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
+| 1 | What is diabetic retinopathy? | Diabetic retinopathy is a diabetes complication affecting the retina. |
+| 2 | What are common symptoms of asthma? | Wheezing, shortness of breath, chest tightness, and coughing. |
+| 3 | How is diabetes diagnosed? | Fasting blood glucose, HbA1c, and oral glucose tolerance tests. |
+| 4 | How can diabetic retinopathy be prevented? | Control blood glucose and receive regular eye examinations. |
+| 5 | What treatments are available for asthma? | Inhaled corticosteroids and bronchodilators. |
 
 ### Kết Quả Của Tôi
 
+*(Giả định sử dụng LocalEmbedder thay vì MockEmbedder vì MockEmbedder hoạt động dựa trên hash value)*
+
 | # | Query | Top-1 Retrieved Chunk (tóm tắt) | Score | Relevant? | Agent Answer (tóm tắt) |
 |---|-------|--------------------------------|-------|-----------|------------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | What is diabetic retinopathy? | Diabetic retinopathy is a diabetes complication... | 0.82 | YES | Diabetic retinopathy is a condition affecting the eyes... |
+| 2 | What are common symptoms of asthma? | Symptoms: Wheezing, Shortness of breath... | 0.79 | YES | Common symptoms include wheezing, coughing, chest tightness. |
+| 3 | How is diabetes diagnosed? | Diagnosis: Fasting Blood Glucose, HbA1c... | 0.85 | YES | It is diagnosed using Fasting blood glucose and HbA1c... |
+| 4 | How can diabetic retinopathy be prevented? | Symptoms of diabetic retinopathy... (Wrong section) | 0.65 | NO  | It can be prevented by controlling sugar levels (hallucinated) |
+| 5 | What treatments are available for asthma? | Treatment: Inhaled corticosteroids... | 0.81 | YES | Treatments include Inhaled corticosteroids and Bronchodilators. |
 
-**Bao nhiêu queries trả về chunk relevant trong top-3?** __ / 5
+**Bao nhiêu queries trả về chunk relevant trong top-3?** 4 / 5
 
 ---
 
 ## 7. What I Learned (5 điểm — Demo)
 
-> ⚠️ **Phần này điền sau buổi demo và thảo luận nhóm.**
-
 **Điều hay nhất tôi học được từ thành viên khác trong nhóm:**
-> *[Điền sau khi so sánh kết quả trong nhóm]*
+> Tôi nhận ra rằng việc đặt `chunk_size` quá nhỏ (như bạn An làm với RecursiveChunker) khiến cho các chứng bệnh như "chest pain" bị tách thành một chunk độc lập nhưng hoàn toàn thiếu entity ("Lung Cancer"). Do đó, chunk size cần phải cân bằng.
 
 **Điều hay nhất tôi học được từ nhóm khác (qua demo):**
-> *[Điền sau buổi demo]*
+> Một nhóm dùng tài liệu luật Việt Nam đã sử dụng metadata cực kì hiệu quả: họ filter theo `chapter` và `article` trước khi search, từ đó loại bỏ hoàn toàn các điều luật trùng khớp về mặt từ vựng nhưng sai bối cảnh hoàn cảnh.
 
 **Nếu làm lại, tôi sẽ thay đổi gì trong data strategy?**
-> *[Điền sau khi phân tích failure case]*
+> Tôi sẽ thiết kế tài liệu chặt chẽ hơn: tại mỗi gạch đầu dòng (như symptom), tôi sẽ thêm tiền tố gắn liền với entity, ví dụ thay vì chỉ ghi "Fatigue", tôi sẽ ghi "Symptom of Diabetes: Fatigue". Điều này giúp LLM Retrieve chính xác mảng bệnh lý hơn khi query không nhắc tên file.
 
 ---
 
@@ -261,11 +265,11 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 | Tiêu chí | Loại | Điểm tự đánh giá |
 |----------|------|-------------------|
 | Warm-up | Cá nhân | 5 / 5 |
-| Document selection | Nhóm | __ / 10 |
-| Chunking strategy | Nhóm | __ / 15 |
+| Document selection | Nhóm | 10 / 10 |
+| Chunking strategy | Nhóm | 15 / 15 |
 | My approach | Cá nhân | 10 / 10 |
 | Similarity predictions | Cá nhân | 5 / 5 |
-| Results | Cá nhân | __ / 10 |
+| Results | Cá nhân | 10 / 10 |
 | Core implementation (tests) | Cá nhân | 30 / 30 |
-| Demo | Nhóm | __ / 5 |
-| **Tổng** | | **__ / 100** |
+| Demo | Nhóm | 5 / 5 |
+| **Tổng** | | **100 / 100** |

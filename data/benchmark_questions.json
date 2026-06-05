@@ -1,0 +1,27 @@
+[
+  {
+    "question": "What is diabetic retinopathy?",
+    "expected_doc": "diabetic_retinopathy.md",
+    "expected_answer": "Diabetic retinopathy is a diabetes complication affecting the retina."
+  },
+  {
+    "question": "What are common symptoms of asthma?",
+    "expected_doc": "asthma.md",
+    "expected_answer": "Wheezing, shortness of breath, chest tightness, and coughing."
+  },
+  {
+    "question": "How is diabetes diagnosed?",
+    "expected_doc": "diabetes.md",
+    "expected_answer": "Fasting blood glucose, HbA1c, and oral glucose tolerance tests."
+  },
+  {
+    "question": "How can diabetic retinopathy be prevented?",
+    "expected_doc": "diabetic_retinopathy.md",
+    "expected_answer": "Control blood glucose and receive regular eye examinations."
+  },
+  {
+    "question": "What treatments are available for asthma?",
+    "expected_doc": "asthma.md",
+    "expected_answer": "Inhaled corticosteroids and bronchodilators."
+  }
+]
